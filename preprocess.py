@@ -1,27 +1,48 @@
+import numpy as np
 import pandas as pd
-
-df = pd.read_csv("data/data.csv")
-
-print(df.columns)
-
+from sklearn.model_selection import train_test_split
+from sklearn import preprocessing
+from config.config_parser import Config
 
 
-df["date"] = df["date"].replace(to_replace="(2014|2015)(.*)", value='\\1', regex=True)
-df["date"] = df["date"].replace({"2014":0, "2015":1})
+conf = Config("config/system.config")
+path_data = conf.get_config("PATHS", "path_data")
+path_X_train = conf.get_config("PATHS", "path_X_train")
+path_Y_train = conf.get_config("PATHS", "path_Y_train")
+path_X_test = conf.get_config("PATHS", "path_X_test")
+path_Y_test = conf.get_config("PATHS", "path_Y_test")
 
 
-print(df["yr_renovated"].value_counts())
+def preprocess():
+    df = pd.read_csv(path_data)
+    df['is_renovated'] = df['yr_renovated'].apply(lambda x: 1 if x > 0 else 0)
+    df.drop(columns=["id", "date", "condition", "zipcode", "yr_built", "yr_renovated"], axis=1, inplace=True)
+    df = remove_outliers(df)
+    Y = df["price"].values
+    df.drop(columns=["price"], axis=1, inplace=True)
+    X = df.values
+    X = preprocessing.normalize(X)
+    return X, Y
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
-sns.jointplot(x="grade", y="price", data=df, kind = 'reg', size = 7)
+def remove_outliers(df):
+    q1 = df.quantile(0.25)
+    q3 = df.quantile(0.75)
+    iqr = q3 - q1
+    df = df[~((df < (q1 - 2 * iqr)) | (df > (q3 + 2 * iqr))).any(axis=1)]
+    return df
 
-# Create 2 new columns for the analysis
-df['sqft_basement2'] = df['sqft_basement'].apply(lambda x: x if x > 0 else None)
-df['yr_renovated2'] = df['yr_renovated'].apply(lambda x: x if x > 0 else None)
 
-# Show the new plots with paerson correlation
-sns.jointplot(x="sqft_basement2", y="price", data=df, kind = 'reg', dropna=True, size = 5)
-sns.jointplot(x="yr_renovated2", y="price", data=df, kind = 'reg', dropna=True, size = 5)
-plt.show()
+def generate_train_test_data():
+    X, Y = preprocess()
+    X_train, X_test, Y_train, Y_test = train_test_split(X,
+                                                        Y,
+                                                        test_size=.20,
+                                                        random_state=0)
+    np.save(path_X_train, X_train)
+    np.save(path_Y_train, Y_train)
+    np.save(path_X_test, X_test)
+    np.save(path_Y_test, Y_test)
+
+
+generate_train_test_data()
