@@ -15,21 +15,19 @@ path_Y_dev = conf.get_config("PATHS", "path_Y_dev")
 
 def preprocess():
     df = pd.read_csv(path_data)
-    df['is_renovated'] = df['yr_renovated'].apply(lambda x: 1 if x > 0 else 0)
-    df.drop(columns=["id", "date", "condition", "zipcode", "yr_renovated"], axis=1, inplace=True)
+    df.drop(columns=["id", "sqft_lot", "sqft_lot15", "date", "zipcode", "condition", "floors", "yr_renovated"], axis=1, inplace=True)
     # df = remove_outliers(df)
     Y = df["price"].values
     df.drop(columns=["price"], axis=1, inplace=True)
     X = df.values
-    X = preprocessing.normalize(X)
+    X = preprocessing.MinMaxScaler().fit_transform(X)
     return X, Y
-
 
 def remove_outliers(df):
     q1 = df.quantile(0.25)
     q3 = df.quantile(0.75)
     iqr = q3 - q1
-    df = df[~((df < (q1 - 2 * iqr)) | (df > (q3 + 2 * iqr))).any(axis=1)]
+    df = df[~((df < (q1 - 3 * iqr)) | (df > (q3 + 3 * iqr))).any(axis=1)]
     return df
 
 

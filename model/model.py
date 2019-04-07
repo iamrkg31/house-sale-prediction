@@ -21,11 +21,8 @@ class MODEL(object):
         if not is_test:
             switcher = {
                 "LinearRegressor": LinearRegression(),
-                "SBDRegressor": SGDRegressor(random_state=0),
-                "GradientBoostingRegressor" : GradientBoostingRegressor(random_state=0),
-                "KNeighborsRegressor" : KNeighborsRegressor(),
-                "DecisionTreeRegressor" : DecisionTreeRegressor(),
-                "RandomForestRegressor" : RandomForestRegressor(random_state=0)
+                "RandomForestRegressor" : RandomForestRegressor(random_state=0),
+                "GradientBoostingRegressor": GradientBoostingRegressor(random_state=0),
             }
             model = switcher[name]
             model.fit(self.X_train, self.Y_train)
