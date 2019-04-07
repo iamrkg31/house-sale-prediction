@@ -9,15 +9,15 @@ conf = Config("config/system.config")
 path_data = conf.get_config("PATHS", "path_data")
 path_X_train = conf.get_config("PATHS", "path_X_train")
 path_Y_train = conf.get_config("PATHS", "path_Y_train")
-path_X_test = conf.get_config("PATHS", "path_X_test")
-path_Y_test = conf.get_config("PATHS", "path_Y_test")
+path_X_dev = conf.get_config("PATHS", "path_X_dev")
+path_Y_dev = conf.get_config("PATHS", "path_Y_dev")
 
 
 def preprocess():
     df = pd.read_csv(path_data)
     df['is_renovated'] = df['yr_renovated'].apply(lambda x: 1 if x > 0 else 0)
-    df.drop(columns=["id", "date", "condition", "zipcode", "yr_built", "yr_renovated"], axis=1, inplace=True)
-    df = remove_outliers(df)
+    df.drop(columns=["id", "date", "condition", "zipcode", "yr_renovated"], axis=1, inplace=True)
+    # df = remove_outliers(df)
     Y = df["price"].values
     df.drop(columns=["price"], axis=1, inplace=True)
     X = df.values
@@ -41,8 +41,8 @@ def generate_train_test_data():
                                                         random_state=0)
     np.save(path_X_train, X_train)
     np.save(path_Y_train, Y_train)
-    np.save(path_X_test, X_test)
-    np.save(path_Y_test, Y_test)
+    np.save(path_X_dev, X_test)
+    np.save(path_Y_dev, Y_test)
 
 
 generate_train_test_data()
