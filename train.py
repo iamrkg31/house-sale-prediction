@@ -16,4 +16,5 @@ X_dev = np.load(path_X_dev)
 Y_dev = np.load(path_Y_dev)
 
 model = MODEL(X_train, Y_train, X_dev, Y_dev)
-model.regressor("RandomForestRegressor", path_model_linear_regression, is_test=False)
+# model.regressor("RandomForestRegressor", path_model_linear_regression, is_test=False)
+model.dnn_regressor()

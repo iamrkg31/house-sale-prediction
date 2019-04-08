@@ -1,4 +1,5 @@
 import pickle
+import numpy as np
 import tensorflow as tf
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
@@ -35,4 +36,34 @@ class MODEL(object):
             model = pickle.load(open(path_model, 'rb'))
             Y_pred = model.predict(self.X_test)
             return Y_pred
+
+
+    def dnn_regressor(self):
+        steps = int(len(self.X_train)/128)
+        feature_col = [tf.feature_column.numeric_column(key='feature',shape=(self.X_train.shape[1],))]
+        model = tf.contrib.learn.DNNRegressor(hidden_units=[1024, 512, 256],
+                        optimizer=tf.train.ProximalAdagradOptimizer(
+                          learning_rate=0.005,
+                          l1_regularization_strength=0.001
+                        ), feature_columns=feature_col)
+        for i in range(1000):
+            model.fit(input_fn=tf.estimator.inputs.numpy_input_fn(
+                dict({'feature': self.X_train}), self.Y_train,
+                shuffle=True), steps=steps)
+        predictions = model.predict_scores(input_fn=tf.estimator.inputs.numpy_input_fn(dict({'feature': self.X_dev}), self.Y_dev, batch_size=len(self.Y_dev), shuffle=False), as_iterable=False)
+
+        print_rmse(model, 'eval', input_fn=tf.estimator.inputs.numpy_input_fn(dict({'feature': self.X_dev}), self.Y_dev, num_epochs=1, shuffle=False))
+
+        score = r2_score(self.Y_dev, np.array(list(predictions)))
+        print(score)
+
+        for i in range(4323):
+            print(self.Y_dev[i], " : ", predictions[i])
+
+
+
+def print_rmse(model, name, input_fn):
+  metrics = model.evaluate(input_fn=input_fn, steps=1)
+  print(metrics)
+  # print ('RMSE on {} dataset = {} USD'.format(name, np.sqrt(metrics['average_loss'])))
 
